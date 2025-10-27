@@ -1,0 +1,41 @@
+### Health Check MySQL
+GET http://localhost:3000/api/health
+
+### Health Check MongoDB
+GET http://localhost:3001/api/health
+
+### Registrar usuario
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+    "name": "Juan Pérez",
+    "email": "juan@example.com",
+    "password": "password123",
+    "type": "seller"
+}
+
+### Login usuario
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+    "email": "juan@example.com",
+    "password": "password123"
+}
+
+### Obtener productos
+GET http://localhost:3000/api/products
+
+### Agregar producto (necesita token)
+POST http://localhost:3000/api/products
+Authorization: Bearer TU_TOKEN_AQUI
+Content-Type: application/json
+
+{
+    "name": "iPhone 13 Pro",
+    "description": "Smartphone en excelente estado, 256GB",
+    "price": 18000,
+    "category": "electronica",
+    "image_url": "https://ejemplo.com/iphone.jpg"
+}

@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketLocal - Tu Mercado Local</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== VARIABLES Y RESET ===== */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            
+            --light-bg: #f8f9fa;
+            --light-text: #6c757d;
+            --dark-text: #2c3e50;
+            --border-color: #dee2e6;
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+            
+            --border-radius: 8px;
+            --border-radius-sm: 4px;
+            --border-radius-lg: 12px;
+            
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-xxl: 48px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+            min-height: 100vh;
+        }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* ===== HEADER ===== */
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            font-size: 1.75rem;
+        }
+
+        .main-nav .nav-list {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        /* ===== BOTONES ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        /* ===== SECCIONES PRINCIPALES ===== */
+        .main-content {
+            min-height: calc(100vh - 80px);
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.9), rgba(52, 152, 219, 0.9));
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ===== FEATURES SECTION ===== */
+        .features-section {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .feature-description {
+            color: var(--light-text);
+            line-height: 1.6;
+        }
+
+        /* ===== STATS SECTION ===== */
+        .stats-section {
+            padding: 4rem 0;
+            background: var(--light-bg);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--light-text);
+            font-weight: 500;
+        }
+
+        /* ===== PRODUCTOS ===== */
+        .products-container {
+            padding: 2rem 0;
+            min-height: 400px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .product-image {
+            height: 200px;
+            background: var(--light-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-text);
+            font-size: 3rem;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-category {
+            color: var(--secondary-color);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            line-height: 1.4;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .product-description {
+            color: var(--light-text);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--light-text);
+        }
+
+        .product-location,
+        .product-seller {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* ===== FORMULARIOS ===== */
+        .upload-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .product-form {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ===== FILTROS ===== */
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        /* ===== MODALES ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 400px;
+            width: 90%;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--light-text);
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .auth-switch a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== NOTIFICACIONES ===== */
+        #notificationsContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 3000;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 0.5rem;
+            border-left: 4px solid var(--success-color);
+            animation: slideInRight 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .notification.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== ESTADOS ===== */
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+            color: var(--light-text);
+        }
+
+        .loading-spinner i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .no-products {
+            text-align: center;
+            padding: 3rem;
+            color: var(--light-text);
+        }
+
+        .no-products i {
+            margin-bottom: 1.5rem;
+            color: var(--border-color);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .main-nav .nav-list {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .auth-section {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.25rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>MarketLocal</span>
+            </div>
+            
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li><a href="#" class="nav-link active" data-section="home">Inicio</a></li>
+                    <li><a href="#" class="nav-link" data-section="products">Productos</a></li>
+                    <li><a href="#" class="nav-link" data-section="upload">Vender</a></li>
+                    <li><a href="#" class="nav-link" data-section="my-products">Mis Productos</a></li>
+                </ul>
+            </nav>
+
+            <div class="auth-section">
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-outline" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                    <button class="btn btn-primary" id="registerBtn">
+                        <i class="fas fa-user-plus"></i> Registrarse
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <div class="user-info">
+                        <span class="user-name" id="userName"></span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Sección Home -->
+        <section id="home" class="page-section active">
+            <div class="hero-section">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">MarketLocal</h1>
+                        <p class="hero-subtitle">Tu mercado de confianza, cerca de ti</p>
+                        <p class="hero-description">
+                            Conectamos compradores y vendedores locales. Desde ropa hasta terrenos, 
+                            todo está más cerca de lo que imaginas.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-lg" id="exploreProducts">
+                                <i class="fas fa-search"></i> Explorar Productos
+                            </button>
+                            <button class="btn btn-secondary btn-lg" id="startSelling">
+                                <i class="fas fa-plus"></i> Comenzar a Vender
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <div class="container">
+                    <h2 class="section-title">¿Por qué elegir MarketLocal?</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <h3 class="feature-title">Geolocalización Inteligente</h3>
+                            <p class="feature-description">
+                                Encuentra productos cerca de tu ubicación con nuestra tecnología 
+                                de geolocalización avanzada.
+                            </p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="feature-title">Comercio Seguro</h3>
+                            <p class="feature-description">
+                                Transacciones seguras y perfiles verificados para una experiencia 
+                                de compra confiable.
+                            </p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="feature-title">Rápido y Simple</h3>
+                            <p class="feature-description">
+                                Publica tus productos en minutos y comienza a vender en tu comunidad local.
+                            </p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="feature-title">Comunidad Local</h3>
+                            <p class="feature-description">
+                                Conecta con compradores y vendedores de tu zona, fomentando 
+                                el comercio local.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="container">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProducts">25</div>
+                            <div class="stat-label">Productos Activos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalUsers">150</div>
+                            <div class="stat-label">Usuarios Registrados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalCategories">6</div>
+                            <div class="stat-label">Categorías</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Productos -->
+        <section id="products" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Productos Disponibles</h2>
+                    <p class="section-subtitle">Descubre lo que la comunidad local tiene para ofrecer</p>
+                </div>
+
+                <div class="filters-section">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label for="categoryFilter">Categoría</label>
+                            <select id="categoryFilter" class="filter-select">
+                                <option value="">Todas las categorías</option>
+                                <option value="ropa">Ropa y Moda</option>
+                                <option value="electronica">Electrónicos</option>
+                                <option value="hogar">Hogar y Jardín</option>
+                                <option value="vehiculos">Vehículos</option>
+                                <option value="herramientas">Herramientas</option>
+                                <option value="terrenos">Terrenos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="conditionFilter">Condición</label>
+                            <select id="conditionFilter" class="filter-select">
+                                <option value="">Todas las condiciones</option>
+                                <option value="nuevo">Nuevo</option>
+                                <option value="como-nuevo">Como nuevo</option>
+                                <option value="usado">Usado</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="applyFilters">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+
+                <div class="products-container">
+                    <div class="products-grid" id="productsGrid">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando productos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Subir Producto -->
+        <section id="upload" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Publicar Nuevo Producto</h2>
+                    <p class="section-subtitle">Comparte lo que quieres vender con la comunidad local</p>
+                </div>
+
+                <div class="upload-container">
+                    <form id="productForm" class="product-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="productTitle" class="form-label">
+                                    Título del Producto *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="productTitle" 
+                                    name="title" 
+                                    class="form-input"
+                                    placeholder="Ej: iPhone 13 Pro Max 256GB"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productPrice" class="form-label">
+                                    Precio (USD) *
+                                </label>
+                                <input 
+                                    type="number" 
+                                    id="productPrice" 
+                                    name="price" 
+                                    class="form-input"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productCategory" class="form-label">
+                                    Categoría *
+                                </label>
+                                <select id="productCategory" name="category" class="form-select" required>
+                                    <option value="">Selecciona una categoría</option>
+                                    <option value="ropa">Ropa y Moda</option>
+                                    <option value="electronica">Electrónicos</option>
+                                    <option value="hogar">Hogar y Jardín</option>
+                                    <option value="vehiculos">Vehículos</option>
+                                    <option value="herramientas">Herramientas</option>
+                                    <option value="terrenos">Terrenos</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productCondition" class="form-label">
+                                    Condición *
+                                </label>
+                                <select id="productCondition" name="condition" class="form-select" required>
+                                    <option value="">Selecciona la condición</option>
+                                    <option value="nuevo">Nuevo</option>
+                                    <option value="como-nuevo">Como nuevo</option>
+                                    <option value="usado">Usado</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="productDescription" class="form-label">
+                                    Descripción *
+                                </label>
+                                <textarea 
+                                    id="productDescription" 
+                                    name="description" 
+                                    class="form-textarea"
+                                    placeholder="Describe tu producto en detalle..."
+                                    rows="5"
+                                    required
+                                ></textarea>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="productLocation" class="form-label">
+                                    Ubicación *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="productLocation" 
+                                    name="location" 
+                                    class="form-input"
+                                    placeholder="Ej: Ciudad, Dirección o Zona"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="submitProduct">
+                                <i class="fas fa-upload"></i> Publicar Producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Mis Productos -->
+        <section id="my-products" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Mis Productos</h2>
+                    <p class="section-subtitle">Gestiona tus publicaciones activas</p>
+                </div>
+
+                <div class="my-products-container">
+                    <div class="products-list" id="myProductsList">
+                        <div class="no-products" id="noMyProducts">
+                            <i class="fas fa-box-open fa-3x"></i>
+                            <h3>Aún no tienes productos publicados</h3>
+                            <p>Comienza a vender publicando tu primer producto.</p>
+                            <button class="btn btn-primary" id="createFirstProduct">
+                                <i class="fas fa-plus"></i> Crear Primer Producto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modales -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Iniciar Sesión</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input 
+                            type="email" 
+                            id="loginEmail" 
+                            class="form-input"
+                            placeholder="tu@email.com"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword" class="form-label">Contraseña</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            class="form-input"
+                            placeholder="Tu contraseña"
+                            required
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </form>
+                
+                <div class="auth-switch">
+                    <p>¿No tienes cuenta? <a href="#" id="switchToRegister">Regístrate aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crear Cuenta</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerName" class="form-label">Nombre Completo</label>
+                        <input 
+                            type="text" 
+                            id="registerName" 
+                            class="form-input"
+                            placeholder="Tu nombre completo"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail" class="form-label">Email</label>
+                        <input 
+                            type="email" 
+                            id="registerEmail" 
+                            class="form-input"
+                            placeholder="tu@email.com"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword" class="form-label">Contraseña</label>
+                        <input 
+                            type="password" 
+                            id="registerPassword" 
+                            class="form-input"
+                            placeholder="Mínimo 6 caracteres"
+                            required
+                            minlength="6"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerLocation" class="form-label">Ubicación</label>
+                        <input 
+                            type="text" 
+                            id="registerLocation" 
+                            class="form-input"
+                            placeholder="Tu ciudad o dirección"
+                            required
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-user-plus"></i> Crear Cuenta
+                    </button>
+                </form>
+                
+                <div class="auth-switch">
+                    <p>¿Ya tienes cuenta? <a href="#" id="switchToLogin">Inicia sesión aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notificationsContainer"></div>
+
+    <!-- JavaScript Integrado -->
+    <script>
+        // MarketLocal - App Simplificada
+        console.log('✅ MarketLocal App cargando...');
+
+        class MarketLocalApp {
+            constructor() {
+                this.API_BASE_URL = 'http://localhost:5000/api';
+                this.currentUser = null;
+                this.init();
+            }
+
+            init() {
+                console.log('🚀 Inicializando MarketLocal...');
+                this.setupEventListeners();
+                this.showNotification('Aplicación cargada correctamente', 'success');
+            }
+
+            setupEventListeners() {
+                console.log('🔧 Configurando event listeners...');
+                
+                // Navegación
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.handleNavigation(e.target);
+                    });
+                });
+
+                // Botones principales
+                document.getElementById('exploreProducts')?.addEventListener('click', () => {
+                    this.showSection('products');
+                });
+
+                document.getElementById('startSelling')?.addEventListener('click', () => {
+                    this.showSection('upload');
+                });
+
+                document.getElementById('createFirstProduct')?.addEventListener('click', () => {
+                    this.showSection('upload');
+                });
+
+                // Botones de auth
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    this.showModal('loginModal');
+                });
+
+                document.getElementById('registerBtn').addEventListener('click', () => {
+                    this.showModal('registerModal');
+                });
+
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.handleLogout();
+                });
+
+                // Cerrar modales
+                document.querySelectorAll('.modal-close').forEach(closeBtn => {
+                    closeBtn.addEventListener('click', (e) => {
+                        const modal = e.target.closest('.modal');
+                        this.hideModal(modal.id);
+                    });
+                });
+
+                // Clicks fuera del modal
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.hideModal(modal.id);
+                        }
+                    });
+                });
+
+                // Switch entre modales
+                document.getElementById('switchToRegister').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.hideModal('loginModal');
+                    this.showModal('registerModal');
+                });
+
+                document.getElementById('switchToLogin').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.hideModal('registerModal');
+                    this.showModal('loginModal');
+                });
+
+                // Formularios
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    this.handleLogin(e);
+                });
+
+                document.getElementById('registerForm').addEventListener('submit', (e) => {
+                    this.handleRegister(e);
+                });
+
+                document.getElementById('productForm').addEventListener('submit', (e) => {
+                    this.handleProductSubmit(e);
+                });
+
+                // Filtros
+                document.getElementById('applyFilters').addEventListener('click', () => {
+                    this.loadProducts();
+                });
+
+                console.log('✅ Event listeners configurados');
+            }
+
+            handleNavigation(linkElement) {
+                console.log('📱 Navegando a:', linkElement.getAttribute('data-section'));
+                
+                // Remover active de todos los links
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Agregar active al link clickeado
+                linkElement.classList.add('active');
+                
+                // Mostrar sección
+                const sectionId = linkElement.getAttribute('data-section');
+                this.showSection(sectionId);
+            }
+
+            showSection(sectionId) {
+                console.log('🎯 Mostrando sección:', sectionId);
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('.page-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Mostrar sección objetivo
+                const targetSection = document.getElementById(sectionId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+            }
+
+            showModal(modalId) {
+                console.log('📦 Abriendo modal:', modalId);
+                document.getElementById(modalId).style.display = 'block';
+            }
+
+            hideModal(modalId) {
+                console.log('📦 Cerrando modal:', modalId);
+                document.getElementById(modalId).style.display = 'none';
+            }
+
+            showNotification(message, type = 'info') {
+                console.log('💬 Notificación:', message);
+                const container = document.getElementById('notificationsContainer');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas ${this.getNotificationIcon(type)}"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                container.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+                return icons[type] || 'fa-info-circle';
+            }
+
+            handleLogout() {
+                console.log('🚪 Cerrando sesión...');
+                this.showNotification('Sesión cerrada', 'success');
+                this.showSection('home');
+            }
+
+            async loadProducts() {
+                console.log('📦 Cargando productos...');
+                const productsGrid = document.getElementById('productsGrid');
+                
+                // Mostrar loading
+                productsGrid.innerHTML = `
+                    <div class="loading-spinner" style="display: block; grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Cargando productos...</p>
+                    </div>
+                `;
+
+                // Simular carga
+                setTimeout(() => {
+                    this.showNoProducts();
+                }, 1000);
+            }
+
+            showNoProducts() {
+                console.log('📭 No hay productos para mostrar');
+                const grid = document.getElementById('productsGrid');
+                grid.innerHTML = `
+                    <div class="no-products" style="display: block; grid-column: 1 / -1;">
+                        <i class="fas fa-search fa-3x"></i>
+                        <h3>No se encontraron productos</h3>
+                        <p>Intenta ajustar tus filtros de búsqueda o sé el primero en publicar un producto.</p>
+                    </div>
+                `;
+            }
+
+            async handleLogin(e) {
+                e.preventDefault();
+                console.log('🔐 Procesando login...');
+                this.showNotification('Funcionalidad de login en desarrollo', 'info');
+                this.hideModal('loginModal');
+            }
+
+            async handleRegister(e) {
+                e.preventDefault();
+                console.log('📝 Procesando registro...');
+                this.showNotification('Funcionalidad de registro en desarrollo', 'info');
+                this.hideModal('registerModal');
+            }
+
+            async handleProductSubmit(e) {
+                e.preventDefault();
+                console.log('📤 Enviando producto...');
+                this.showNotification('Funcionalidad de publicación en desarrollo', 'info');
+            }
+        }
+
+        // Inicializar la aplicación
+        console.log('📄 DOM cargado, inicializando app...');
+        document.addEventListener('DOMContentLoaded', () => {
+            window.marketLocalApp = new MarketLocalApp();
+        });
+    </script>
+</body>
+</html>

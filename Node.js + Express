@@ -1,0 +1,234 @@
+// server.js
+const express = require('express');
+const mysql = require('mysql2');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Conexión a MySQL
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'tu_usuario',
+    password: 'tu_contraseña',
+    database: 'tienda_bienes_online'
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('Error conectando a MySQL:', err);
+        return;
+    }
+    console.log('Conectado a MySQL');
+});
+
+// Crear tablas si no existen
+const createTables = `
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        type ENUM('buyer', 'seller') NOT NULL,
+        phone VARCHAR(20),
+        address TEXT,
+        bio TEXT,
+        rating DECIMAL(3,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        category ENUM('ropa', 'hogar', 'electronica', 'propiedades', 'otros') NOT NULL,
+        image_url VARCHAR(500),
+        seller_id INT,
+        active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (seller_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS locations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        latitude DECIMAL(10,8) NOT NULL,
+        longitude DECIMAL(11,8) NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+`;
+
+db.query(createTables, (err) => {
+    if (err) console.error('Error creando tablas:', err);
+});
+
+// Middleware de autenticación
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token requerido' });
+    }
+
+    jwt.verify(token, 'tu_secreto_jwt', (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Token inválido' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Endpoints de Usuarios
+app.post('/api/register', async (req, res) => {
+    try {
+        const { name, email, password, type } = req.body;
+        
+        // Verificar si el usuario existe
+        const [existing] = await db.promise().query(
+            'SELECT id FROM users WHERE email = ?', 
+            [email]
+        );
+        
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'El usuario ya existe' });
+        }
+
+        // Hash de la contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insertar usuario
+        const [result] = await db.promise().query(
+            'INSERT INTO users (name, email, password, type) VALUES (?, ?, ?, ?)',
+            [name, email, hashedPassword, type]
+        );
+
+        const token = jwt.sign(
+            { userId: result.insertId, email, type },
+            'tu_secreto_jwt',
+            { expiresIn: '24h' }
+        );
+
+        res.json({ 
+            message: 'Usuario registrado exitosamente',
+            token,
+            user: { id: result.insertId, name, email, type }
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const [users] = await db.promise().query(
+            'SELECT * FROM users WHERE email = ?', 
+            [email]
+        );
+
+        if (users.length === 0) {
+            return res.status(400).json({ error: 'Credenciales inválidas' });
+        }
+
+        const user = users[0];
+        const validPassword = await bcrypt.compare(password, user.password);
+
+        if (!validPassword) {
+            return res.status(400).json({ error: 'Credenciales inválidas' });
+        }
+
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, type: user.type },
+            'tu_secreto_jwt',
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            message: 'Login exitoso',
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                type: user.type
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
+
+// Endpoints de Productos
+app.get('/api/products', async (req, res) => {
+    try {
+        const [products] = await db.promise().query(`
+            SELECT p.*, u.name as seller_name 
+            FROM products p 
+            JOIN users u ON p.seller_id = u.id 
+            WHERE p.active = TRUE
+        `);
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Error obteniendo productos' });
+    }
+});
+
+app.post('/api/products', authenticateToken, async (req, res) => {
+    try {
+        const { name, description, price, category, image_url } = req.body;
+        
+        const [result] = await db.promise().query(
+            `INSERT INTO products (name, description, price, category, image_url, seller_id) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, description, price, category, image_url, req.user.userId]
+        );
+
+        res.json({ 
+            message: 'Producto agregado exitosamente',
+            productId: result.insertId
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error agregando producto' });
+    }
+});
+
+app.get('/api/user/products', authenticateToken, async (req, res) => {
+    try {
+        const [products] = await db.promise().query(
+            'SELECT * FROM products WHERE seller_id = ?',
+            [req.user.userId]
+        );
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Error obteniendo productos' });
+    }
+});
+
+// Endpoint de perfil de usuario
+app.put('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const { name, email, phone, address, bio } = req.body;
+        
+        await db.promise().query(
+            `UPDATE users SET name = ?, email = ?, phone = ?, address = ?, bio = ? 
+             WHERE id = ?`,
+            [name, email, phone, address, bio, req.user.userId]
+        );
+
+        res.json({ message: 'Perfil actualizado exitosamente' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error actualizando perfil' });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor ejecutándose en puerto ${PORT}`);
+});
