@@ -1,0 +1,491 @@
+<script>
+    // MarketLocal - Versión SUPER SIMPLE Y FUNCIONAL
+    console.log('🚀 Iniciando MarketLocal...');
+
+    // Configuración
+    const API_URL = 'http://localhost:5000/api';
+    let currentUser = null;
+
+    // Inicialización cuando la página carga
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ DOM cargado');
+        initApp();
+    });
+
+    function initApp() {
+        console.log('🔧 Inicializando aplicación...');
+        setupEventListeners();
+        checkAuth();
+        loadProducts();
+        showMessage('Aplicación lista', 'success');
+    }
+
+    function setupEventListeners() {
+        console.log('🎯 Configurando eventos...');
+
+        // Navegación
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                showSection(section);
+            });
+        });
+
+        // Botones principales
+        document.getElementById('exploreProducts')?.addEventListener('click', () => showSection('products'));
+        document.getElementById('startSelling')?.addEventListener('click', () => showSection('upload'));
+        document.getElementById('createFirstProduct')?.addEventListener('click', () => showSection('upload'));
+
+        // Botones de auth
+        document.getElementById('loginBtn').addEventListener('click', () => showModal('loginModal'));
+        document.getElementById('registerBtn').addEventListener('click', () => showModal('registerModal'));
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Cerrar modales
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+
+        // Clicks fuera del modal
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+        });
+
+        // Switch modales
+        document.getElementById('switchToRegister').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal('loginModal');
+            showModal('registerModal');
+        });
+
+        document.getElementById('switchToLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideModal('registerModal');
+            showModal('loginModal');
+        });
+
+        // Formularios
+        document.getElementById('loginForm').addEventListener('submit', login);
+        document.getElementById('registerForm').addEventListener('submit', register);
+        document.getElementById('productForm').addEventListener('submit', createProduct);
+
+        // Filtros
+        document.getElementById('applyFilters').addEventListener('click', loadProducts);
+    }
+
+    function showSection(sectionId) {
+        console.log('📁 Mostrando sección:', sectionId);
+        
+        // Ocultar todas las secciones
+        document.querySelectorAll('.page-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Mostrar sección seleccionada
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+
+        // Actualizar navegación
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('data-section') === sectionId) {
+                link.classList.add('active');
+            }
+        });
+
+        // Cargar datos si es necesario
+        if (sectionId === 'products') {
+            loadProducts();
+        } else if (sectionId === 'my-products') {
+            if (currentUser) {
+                loadUserProducts();
+            } else {
+                showMessage('Inicia sesión para ver tus productos', 'warning');
+                showModal('loginModal');
+            }
+        } else if (sectionId === 'upload') {
+            if (!currentUser) {
+                showMessage('Inicia sesión para publicar productos', 'warning');
+                showModal('loginModal');
+                showSection('home');
+            }
+        }
+    }
+
+    function showModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showMessage(message, type = 'info') {
+        console.log('💬 Mensaje:', message);
+        const container = document.getElementById('notificationsContainer');
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `<span>${message}</span>`;
+        container.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 4000);
+    }
+
+    async function checkAuth() {
+        console.log('🔐 Verificando autenticación...');
+        const token = localStorage.getItem('marketlocal_token');
+        
+        if (token) {
+            try {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    updateAuthUI();
+                    console.log('✅ Usuario autenticado:', currentUser.name);
+                } else {
+                    localStorage.removeItem('marketlocal_token');
+                }
+            } catch (error) {
+                localStorage.removeItem('marketlocal_token');
+                console.log('❌ Error de autenticación:', error);
+            }
+        }
+    }
+
+    function updateAuthUI() {
+        if (currentUser) {
+            document.getElementById('authButtons').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'flex';
+            document.getElementById('userName').textContent = currentUser.name;
+        } else {
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('userMenu').style.display = 'none';
+        }
+    }
+
+    async function login(e) {
+        e.preventDefault();
+        console.log('🔐 Iniciando sesión...');
+        
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email || !password) {
+            showMessage('Email y contraseña requeridos', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            console.log('📨 Respuesta login:', data);
+
+            if (data.success) {
+                localStorage.setItem('marketlocal_token', data.token);
+                currentUser = data.user;
+                updateAuthUI();
+                hideModal('loginModal');
+                document.getElementById('loginForm').reset();
+                showMessage('¡Bienvenido!', 'success');
+            } else {
+                showMessage(data.message || 'Error en login', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Error login:', error);
+            showMessage('Error de conexión', 'error');
+        }
+    }
+
+    async function register(e) {
+        e.preventDefault();
+        console.log('📝 Registrando usuario...');
+        
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const location = document.getElementById('registerLocation').value;
+
+        if (!name || !email || !password || !location) {
+            showMessage('Todos los campos son requeridos', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, location })
+            });
+
+            const data = await response.json();
+            console.log('📨 Respuesta registro:', data);
+
+            if (data.success) {
+                localStorage.setItem('marketlocal_token', data.token);
+                currentUser = data.user;
+                updateAuthUI();
+                hideModal('registerModal');
+                document.getElementById('registerForm').reset();
+                showMessage('¡Cuenta creada exitosamente!', 'success');
+            } else {
+                showMessage(data.message || 'Error en registro', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Error registro:', error);
+            showMessage('Error de conexión', 'error');
+        }
+    }
+
+    function logout() {
+        console.log('🚪 Cerrando sesión...');
+        localStorage.removeItem('marketlocal_token');
+        currentUser = null;
+        updateAuthUI();
+        showMessage('Sesión cerrada', 'success');
+        showSection('home');
+    }
+
+    async function loadProducts() {
+        console.log('📦 Cargando productos...');
+        const grid = document.getElementById('productsGrid');
+        
+        if (!grid) return;
+
+        grid.innerHTML = `
+            <div class="loading-spinner" style="display: block; grid-column: 1 / -1;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando productos...</p>
+            </div>
+        `;
+
+        try {
+            const category = document.getElementById('categoryFilter')?.value || '';
+            const condition = document.getElementById('conditionFilter')?.value || '';
+            
+            let url = `${API_URL}/products`;
+            if (category || condition) {
+                const params = new URLSearchParams();
+                if (category) params.append('category', category);
+                if (condition) params.append('condition', condition);
+                url += '?' + params.toString();
+            }
+
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            console.log('📦 Productos recibidos:', data);
+
+            if (data.success && data.products && data.products.length > 0) {
+                displayProducts(data.products);
+            } else {
+                showNoProducts();
+            }
+        } catch (error) {
+            console.error('❌ Error cargando productos:', error);
+            showNoProducts();
+        }
+    }
+
+    function displayProducts(products) {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = products.map(product => `
+            <div class="product-card">
+                <div class="product-image">
+                    <i class="fas fa-${getCategoryIcon(product.category)}"></i>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">${getCategoryName(product.category)}</div>
+                    <h3 class="product-title">${product.title}</h3>
+                    <div class="product-price">$${product.price}</div>
+                    <p class="product-description">${product.description}</p>
+                    <div class="product-meta">
+                        <div class="product-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${product.location?.address || 'Sin ubicación'}
+                        </div>
+                        <div class="product-seller">
+                            <i class="fas fa-user"></i>
+                            ${product.seller?.name || 'Vendedor'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showNoProducts() {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = `
+            <div class="no-products" style="display: block; grid-column: 1 / -1;">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No hay productos disponibles</h3>
+                <p>Sé el primero en publicar un producto.</p>
+            </div>
+        `;
+    }
+
+    async function loadUserProducts() {
+        if (!currentUser) return;
+
+        const container = document.getElementById('myProductsList');
+        container.innerHTML = '<div class="loading-spinner"><p>Cargando tus productos...</p></div>';
+
+        try {
+            const token = localStorage.getItem('marketlocal_token');
+            const response = await fetch(`${API_URL}/products/user/products`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+            if (data.success && data.products && data.products.length > 0) {
+                displayUserProducts(data.products);
+            } else {
+                showNoUserProducts();
+            }
+        } catch (error) {
+            showNoUserProducts();
+        }
+    }
+
+    function displayUserProducts(products) {
+        const container = document.getElementById('myProductsList');
+        container.innerHTML = products.map(product => `
+            <div class="product-card">
+                <div class="product-image">
+                    <i class="fas fa-${getCategoryIcon(product.category)}"></i>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-title">${product.title}</h3>
+                    <div class="product-price">$${product.price}</div>
+                    <p class="product-description">${product.description}</p>
+                    <button class="btn btn-outline btn-sm" onclick="deleteProduct('${product._id}')">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showNoUserProducts() {
+        const container = document.getElementById('myProductsList');
+        container.innerHTML = `
+            <div class="no-products">
+                <i class="fas fa-box-open fa-3x"></i>
+                <h3>No tienes productos</h3>
+                <button class="btn btn-primary" onclick="showSection('upload')">
+                    <i class="fas fa-plus"></i> Crear Producto
+                </button>
+            </div>
+        `;
+    }
+
+    async function createProduct(e) {
+        e.preventDefault();
+        console.log('📤 Creando producto...');
+        
+        if (!currentUser) {
+            showMessage('Inicia sesión para publicar', 'warning');
+            return;
+        }
+
+        const formData = {
+            title: document.getElementById('productTitle').value,
+            description: document.getElementById('productDescription').value,
+            price: parseFloat(document.getElementById('productPrice').value),
+            category: document.getElementById('productCategory').value,
+            condition: document.getElementById('productCondition').value,
+            location: document.getElementById('productLocation').value
+        };
+
+        try {
+            const token = localStorage.getItem('marketlocal_token');
+            const response = await fetch(`${API_URL}/products`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showMessage('¡Producto publicado!', 'success');
+                document.getElementById('productForm').reset();
+                loadProducts();
+            } else {
+                showMessage(data.message || 'Error al publicar', 'error');
+            }
+        } catch (error) {
+            showMessage('Error de conexión', 'error');
+        }
+    }
+
+    async function deleteProduct(productId) {
+        if (!confirm('¿Eliminar este producto?')) return;
+
+        try {
+            const token = localStorage.getItem('marketlocal_token');
+            const response = await fetch(`${API_URL}/products/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showMessage('Producto eliminado', 'success');
+                loadUserProducts();
+            }
+        } catch (error) {
+            showMessage('Error al eliminar', 'error');
+        }
+    }
+
+    function getCategoryIcon(category) {
+        const icons = {
+            'ropa': 'tshirt',
+            'electronica': 'mobile-alt',
+            'hogar': 'home',
+            'vehiculos': 'car',
+            'herramientas': 'tools',
+            'terrenos': 'warehouse'
+        };
+        return icons[category] || 'box';
+    }
+
+    function getCategoryName(category) {
+        const names = {
+            'ropa': 'Ropa y Moda',
+            'electronica': 'Electrónicos',
+            'hogar': 'Hogar y Jardín',
+            'vehiculos': 'Vehículos',
+            'herramientas': 'Herramientas',
+            'terrenos': 'Terrenos'
+        };
+        return names[category] || category;
+    }
+
+    // Hacer funciones globales para los onclick
+    window.showSection = showSection;
+    window.deleteProduct = deleteProduct;
+</script>
